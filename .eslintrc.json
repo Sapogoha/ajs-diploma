@@ -12,6 +12,8 @@
   "rules": {
     "no-restricted-syntax": ["error", "LabeledStatement", "WithStatement"],
     "generator-star-spacing": "off",
-    "no-alert": "off"
+    "no-alert": "off",
+    "no-plusplus": [2, { "allowForLoopAfterthoughts": true }],
+    "no-unused-expressions": [2, { "allowTernary": true }]
   }
 }
