@@ -1,3 +1,5 @@
+import PositionedCharacter from './PositionedCharacter';
+
 /**
  * Generates random characters
  *
@@ -14,9 +16,45 @@ export function* characterGenerator(allowedTypes, maxLevel) {
 
 export function generateTeam(allowedTypes, maxLevel, characterCount) {
   const team = [];
+
   for (let i = 0; i < characterCount; i++) {
     team.push(characterGenerator(allowedTypes, maxLevel).next().value);
   }
 
   return team;
+}
+
+export function generatePosition(team, firstCol, lastCol, boardSize = 8) {
+  const allCells = [...Array(boardSize ** 2).keys()];
+  const cells = [];
+
+  if (firstCol === 1 && lastCol === 2) {
+    cells.push(
+      allCells.filter(
+        (cell) => cell % boardSize === 0 || cell % boardSize === 1,
+      ),
+    );
+  } else if (firstCol === 7 && lastCol === 8) {
+    cells.push(
+      allCells.filter(
+        (cell) => cell % boardSize === 6 || cell % boardSize === 7,
+      ),
+    );
+  }
+
+  const flatCells = cells.flat();
+
+  const positionedCharacters = [];
+
+  for (let i = 0; i < team.length; i++) {
+    const index = Math.floor(Math.random() * flatCells.length);
+    const position = flatCells[index];
+
+    positionedCharacters.push(new PositionedCharacter(team[i], position));
+    if (i === 1 && position === positionedCharacters[0].position) {
+      i = 0;
+    }
+  }
+
+  return positionedCharacters;
 }

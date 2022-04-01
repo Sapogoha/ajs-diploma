@@ -7,7 +7,7 @@ export default class Character {
     this.type = type;
     if (new.target.name === 'Character') {
       throw new Error(
-        "It's not allowed to create new instances of Characters using 'new Character'. Please use classes that extends class Character instead (Bowman, Daemon, etc.)",
+        "It's not allowed to create new instances of Characters using 'new Character'. Please use classes that extend class Character instead (Bowman, Daemon, etc.)",
       );
     }
   }
