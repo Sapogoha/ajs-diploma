@@ -24,17 +24,17 @@ export function generateTeam(allowedTypes, maxLevel, characterCount) {
   return team;
 }
 
-export function generatePosition(team, firstCol, lastCol, boardSize = 8) {
+export function generatePosition(team, side, boardSize = 8) {
   const allCells = [...Array(boardSize ** 2).keys()];
   const cells = [];
 
-  if (firstCol === 1 && lastCol === 2) {
+  if (side === 'human') {
     cells.push(
       allCells.filter(
         (cell) => cell % boardSize === 0 || cell % boardSize === 1,
       ),
     );
-  } else if (firstCol === 7 && lastCol === 8) {
+  } else if (side === 'comp') {
     cells.push(
       allCells.filter(
         (cell) => cell % boardSize === 6 || cell % boardSize === 7,
