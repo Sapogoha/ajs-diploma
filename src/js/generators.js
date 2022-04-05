@@ -26,29 +26,23 @@ export function generateTeam(allowedTypes, maxLevel, characterCount) {
 
 export function generatePosition(team, side, boardSize = 8) {
   const allCells = [...Array(boardSize ** 2).keys()];
-  const cells = [];
+  let possibleCells = null;
 
   if (side === 'human') {
-    cells.push(
-      allCells.filter(
-        (cell) => cell % boardSize === 0 || cell % boardSize === 1,
-      ),
+    possibleCells = allCells.filter(
+      (cell) => cell % boardSize === 0 || cell % boardSize === 1,
     );
   } else if (side === 'comp') {
-    cells.push(
-      allCells.filter(
-        (cell) => cell % boardSize === 6 || cell % boardSize === 7,
-      ),
+    possibleCells = allCells.filter(
+      (cell) => cell % boardSize === 6 || cell % boardSize === 7,
     );
   }
-
-  const flatCells = cells.flat();
 
   const positionedCharacters = [];
 
   for (let i = 0; i < team.length; i++) {
-    const index = Math.floor(Math.random() * flatCells.length);
-    const position = flatCells[index];
+    const index = Math.floor(Math.random() * possibleCells.length);
+    const position = possibleCells[index];
 
     positionedCharacters.push(new PositionedCharacter(team[i], position));
     if (i === 1 && position === positionedCharacters[0].position) {

@@ -1,4 +1,6 @@
 import themes from './themes';
+import cursors from './cursors';
+import { possibleMove } from './utils';
 
 import { generateTeam, generatePosition } from './generators';
 
@@ -9,7 +11,8 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
-    this.selectedCharacter = null;
+    this.selectedCharacter = false;
+    this.indexOfSelectedCharacter = null;
   }
 
   init() {
@@ -35,32 +38,74 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    const {
-      level, attack, defence, health,
-    } = this.positioned.find(
+    const characterHere = this.positioned.find(
       (character) => character.position === index,
-    ).character;
-    this.gamePlay.showCellTooltip(
-      `🎖${level} ⚔${attack} 🛡${defence} ❤${health}`,
-      index,
     );
+
+    if (characterHere) {
+      const {
+        level, attack, defence, health,
+      } = characterHere.character;
+
+      this.gamePlay.showCellTooltip(
+        `🎖${level} ⚔${attack} 🛡${defence} ❤${health}`,
+        index,
+      );
+    }
+
+    if (this.indexOfSelectedCharacter) {
+      const numOfSteps = this.positioned.find(
+        (character) => character.position === this.indexOfSelectedCharacter,
+      ).character.moveDistance;
+
+      if (numOfSteps) {
+        const allowedMove = possibleMove(
+          this.indexOfSelectedCharacter,
+          index,
+          numOfSteps,
+        );
+        if (this.selectedCharacter === true && allowedMove) {
+          this.gamePlay.selectCell(index, 'green');
+          if (characterHere && characterHere.character.team === 'comp') {
+            this.gamePlay.selectCell(index, 'red');
+            this.gamePlay.setCursor(cursors.crosshair);
+          } else if (
+            characterHere
+            && characterHere.character.team === 'human'
+          ) {
+            this.gamePlay.selectCell(index, '');
+          }
+        } else {
+          this.gamePlay.setCursor(cursors.notallowed);
+        }
+      }
+    }
   }
 
   onCellLeave(index) {
     this.gamePlay.hideCellTooltip(index);
+    if (index !== this.indexOfSelectedCharacter) {
+      this.gamePlay.deselectCell(index);
+      this.gamePlay.setCursor(cursors.pointer);
+    }
   }
 
   onCellClick(index) {
-    const { team } = this.positioned.find(
+    const characterHere = this.positioned.find(
       (character) => character.position === index,
-    ).character;
-    if (team === 'comp') {
-      GamePlay.showError('It is not your character. Choose yours');
-      this.gamePlay.deselectCell(this.selectedCharacter || index);
-    } else {
-      this.gamePlay.deselectCell(this.selectedCharacter || index);
-      this.gamePlay.selectCell(index);
-      this.selectedCharacter = index;
+    );
+    if (characterHere) {
+      const { team } = characterHere.character;
+      if (team === 'comp') {
+        GamePlay.showError('It is not your character. Choose yours');
+        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+      } else {
+        this.selectedCharacter = true;
+        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+        this.gamePlay.selectCell(index);
+        this.indexOfSelectedCharacter = index;
+        this.gamePlay.setCursor(cursors.pointer);
+      }
     }
   }
 }
