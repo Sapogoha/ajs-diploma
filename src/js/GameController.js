@@ -23,13 +23,12 @@ export default class GameController {
   }
 
   drawCharacters() {
-    const teamHuman = generateTeam(new Team().teamHuman, 1, 2);
-    const teamComp = generateTeam(new Team().teamComp, 1, 2);
-    const positionedTeamHuman = generatePosition(teamHuman, 'human');
-    const positionedTeamComp = generatePosition(teamComp, 'comp');
+    this.teamHuman = generateTeam(new Team().teamHuman, 1, 2);
+    this.teamComp = generateTeam(new Team().teamComp, 1, 2);
+    this.positionedTeamHuman = generatePosition(this.teamHuman, 'human');
+    this.positionedTeamComp = generatePosition(this.teamComp, 'comp');
 
-    this.positioned = [...positionedTeamHuman, ...positionedTeamComp];
-    this.positionedA = [...positionedTeamComp, ...positionedTeamComp];
+    this.positioned = [...this.positionedTeamHuman, ...this.positionedTeamComp];
     this.gamePlay.redrawPositions(this.positioned);
   }
 
@@ -94,50 +93,84 @@ export default class GameController {
   }
 
   onCellClick(index) {
-    if (this.playersTurn) {
-      const characterHere = this.positioned.find(
-        (character) => character.position === index,
-      );
-      if (characterHere) {
-        const { team } = characterHere.character;
-        if (team === 'comp') {
-          GamePlay.showError('It is not your character. Choose yours');
-          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-        } else {
-          this.selectedCharacter = characterHere;
-          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-          this.gamePlay.selectCell(index);
-          this.indexOfSelectedCharacter = index;
-          this.gamePlay.setCursor(cursors.pointer);
-        }
+    // if (this.playersTurn) {
+    const characterHere = this.positioned.find(
+      (character) => character.position === index,
+    );
+    if (characterHere) {
+      const { team } = characterHere.character;
+      if (team === 'comp' && !this.selectedCharacter) {
+        GamePlay.showError('It is not your character. Choose yours');
+        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+      } else {
+        this.selectedCharacter = characterHere;
+        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+        this.gamePlay.selectCell(index);
+        this.indexOfSelectedCharacter = index;
+        this.gamePlay.setCursor(cursors.pointer);
       }
+    }
 
-      if (!characterHere && this.selectedCharacter) {
-        const numOfSteps = this.selectedCharacter.character.moveDistance;
-        const allowedMove = possibleMove(
-          this.indexOfSelectedCharacter,
-          index,
-          numOfSteps,
+    if (this.selectedCharacter && characterHere) {
+      const { team } = characterHere.character;
+      if (team === 'comp') {
+        const competition = characterHere;
+        const damageValue = Math.max(
+          this.selectedCharacter.character.attack
+            - competition.character.defence,
+          this.selectedCharacter.character.attack * 0.1,
         );
-        if (allowedMove) {
-          this.positioned = [...this.positioned].filter(
-            (character) => character.position !== this.indexOfSelectedCharacter,
-          );
-          this.selectedCharacter.position = index;
-          this.positioned.push(this.selectedCharacter);
-          this.selectedCharacter = null;
-          this.indexOfSelectedCharacter = null;
+        const damage = this.gamePlay.showDamage(index, damageValue);
+
+        damage.then(() => {
+          competition.character.health -= damageValue;
+
+          const removed = this.positionedTeamComp.indexOf(competition);
+          if (competition.character.health <= 0) {
+            this.positionedTeamComp.splice(removed, 1);
+            this.positioned = [
+              ...this.positionedTeamHuman,
+              ...this.positionedTeamComp,
+            ];
+            // if (this.positionedTeamComp.length === 0) {
+            //   alert("win");
+            // }
+          }
           this.gamePlay.redrawPositions(this.positioned);
-          this.gamePlay.cells.forEach((cell) => cell.classList.remove(
-            'selected-yellow',
-            'selected-green',
-            'selected-red',
-          ));
-          this.playersTurn = false;
-        } else {
-          GamePlay.showError('It is not allowed to move here');
-        }
+        });
+
+        this.selectedCharacter = null;
+        this.indexOfSelectedCharacter = null;
+      }
+    }
+
+    if (!characterHere && this.selectedCharacter) {
+      const numOfSteps = this.selectedCharacter.character.moveDistance;
+      const allowedMove = possibleMove(
+        this.indexOfSelectedCharacter,
+        index,
+        numOfSteps,
+      );
+      if (allowedMove) {
+        this.positioned = [...this.positioned].filter(
+          (character) => character.position !== this.indexOfSelectedCharacter,
+        );
+        this.selectedCharacter.position = index;
+        this.positioned.push(this.selectedCharacter);
+        this.selectedCharacter = null;
+        this.indexOfSelectedCharacter = null;
+        this.gamePlay.redrawPositions(this.positioned);
+        this.gamePlay.cells.forEach((cell) => cell.classList.remove(
+          'selected-yellow',
+          'selected-green',
+          'selected-red',
+        ));
+        // this.playersTurn = false;
+      } else {
+        GamePlay.showError('It is not allowed to move here');
       }
     }
   }
+
+  s;
 }
