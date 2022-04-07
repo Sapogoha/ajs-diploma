@@ -39,9 +39,7 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    const characterHere = this.positioned.find(
-      (character) => character.position === index,
-    );
+    const characterHere = this.findCharacterHere(index);
 
     if (characterHere) {
       const {
@@ -55,9 +53,7 @@ export default class GameController {
     }
 
     if (this.indexOfSelectedCharacter) {
-      const numOfSteps = this.positioned.find(
-        (character) => character.position === this.indexOfSelectedCharacter,
-      ).character.moveDistance;
+      const numOfSteps = this.findNumberOfSteps();
 
       if (numOfSteps) {
         const allowedMove = possibleMove(
@@ -94,9 +90,7 @@ export default class GameController {
 
   onCellClick(index) {
     // if (this.playersTurn) {
-    const characterHere = this.positioned.find(
-      (character) => character.position === index,
-    );
+    const characterHere = this.findCharacterHere(index);
     if (characterHere) {
       const { team } = characterHere.character;
       if (team === 'comp' && !this.selectedCharacter) {
@@ -136,6 +130,7 @@ export default class GameController {
             //   alert("win");
             // }
           }
+          this.removeSelected();
           this.gamePlay.redrawPositions(this.positioned);
         });
 
@@ -145,7 +140,7 @@ export default class GameController {
     }
 
     if (!characterHere && this.selectedCharacter) {
-      const numOfSteps = this.selectedCharacter.character.moveDistance;
+      const numOfSteps = this.findNumberOfSteps();
       const allowedMove = possibleMove(
         this.indexOfSelectedCharacter,
         index,
@@ -160,17 +155,29 @@ export default class GameController {
         this.selectedCharacter = null;
         this.indexOfSelectedCharacter = null;
         this.gamePlay.redrawPositions(this.positioned);
-        this.gamePlay.cells.forEach((cell) => cell.classList.remove(
-          'selected-yellow',
-          'selected-green',
-          'selected-red',
-        ));
+        this.removeSelected();
         // this.playersTurn = false;
       } else {
         GamePlay.showError('It is not allowed to move here');
       }
     }
+    // }
   }
 
-  s;
+  removeSelected() {
+    this.gamePlay.cells.forEach((cell) => cell.classList.remove('selected-yellow', 'selected-green', 'selected-red'));
+  }
+
+  findCharacterHere(index) {
+    return this.positioned.find((character) => character.position === index);
+  }
+
+  findNumberOfSteps() {
+    return this.selectedCharacter.character.moveDistance;
+  }
+
+  // computersMove() {
+  //   alert("сходил");
+  //   this.playersTurn = true;
+  // }
 }
