@@ -40,9 +40,8 @@ export function calcHealthLevel(health) {
   return 'high';
 }
 
-export function possibleMove(
+export function countPossibleIndexes(
   currentIndex,
-  futureIndex,
   moveDistance,
   boardSize = 8,
 ) {
@@ -94,6 +93,14 @@ export function possibleMove(
       possibleIndexes.push(downLeftDiag);
     }
   }
+  return possibleIndexes;
+}
 
-  return possibleIndexes.includes(futureIndex);
+export function possibleMove(currentIndex, futureIndex, moveDistance) {
+  const countedPossibleIndexes = countPossibleIndexes(
+    currentIndex,
+    moveDistance,
+  );
+
+  return countedPossibleIndexes.includes(futureIndex);
 }

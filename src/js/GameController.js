@@ -1,6 +1,6 @@
 import themes from './themes';
 import cursors from './cursors';
-import { possibleMove } from './utils';
+import { possibleMove, countPossibleIndexes } from './utils';
 
 import { generateTeam, generatePosition } from './generators';
 
@@ -89,79 +89,86 @@ export default class GameController {
   }
 
   onCellClick(index) {
-    // if (this.playersTurn) {
-    const characterHere = this.findCharacterHere(index);
-    if (characterHere) {
-      const { team } = characterHere.character;
-      if (team === 'comp' && !this.selectedCharacter) {
-        GamePlay.showError('It is not your character. Choose yours');
-        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-      } else {
-        this.selectedCharacter = characterHere;
-        this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-        this.gamePlay.selectCell(index);
-        this.indexOfSelectedCharacter = index;
-        this.gamePlay.setCursor(cursors.pointer);
+    if (this.playersTurn) {
+      const characterHere = this.findCharacterHere(index);
+      if (characterHere) {
+        const { team } = characterHere.character;
+        if (team === 'comp' && !this.selectedCharacter) {
+          GamePlay.showError('It is not your character. Choose yours');
+          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+        } else {
+          this.selectedCharacter = characterHere;
+          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+          this.gamePlay.selectCell(index);
+          this.indexOfSelectedCharacter = index;
+          this.gamePlay.setCursor(cursors.pointer);
+        }
       }
-    }
 
-    if (this.selectedCharacter && characterHere) {
-      const { team } = characterHere.character;
-      if (team === 'comp') {
-        const competition = characterHere;
-        const damageValue = Math.max(
-          this.selectedCharacter.character.attack
-            - competition.character.defence,
-          this.selectedCharacter.character.attack * 0.1,
+      if (this.selectedCharacter && characterHere) {
+        const { team } = characterHere.character;
+        if (team === 'comp') {
+          const competition = characterHere;
+          const damageValue = Math.max(
+            this.selectedCharacter.character.attack
+              - competition.character.defence,
+            this.selectedCharacter.character.attack * 0.1,
+          );
+          const damage = this.gamePlay.showDamage(index, damageValue);
+
+          damage.then(() => {
+            competition.character.health -= damageValue;
+
+            const removed = this.positionedTeamComp.indexOf(competition);
+            if (competition.character.health <= 0) {
+              this.positionedTeamComp.splice(removed, 1);
+              this.positioned = [
+                ...this.positionedTeamHuman,
+                ...this.positionedTeamComp,
+              ];
+              // if (this.positionedTeamComp.length === 0) {
+              //   alert("win");
+              // }
+            }
+            this.removeSelected();
+            this.gamePlay.redrawPositions(this.positioned);
+            this.computersMove();
+          });
+
+          this.selectedCharacter = null;
+          this.indexOfSelectedCharacter = null;
+          this.playersTurn = false;
+        }
+      }
+
+      if (!characterHere && this.selectedCharacter) {
+        const numOfSteps = this.findNumberOfSteps();
+        const allowedMove = possibleMove(
+          this.indexOfSelectedCharacter,
+          index,
+          numOfSteps,
         );
-        const damage = this.gamePlay.showDamage(index, damageValue);
-
-        damage.then(() => {
-          competition.character.health -= damageValue;
-
-          const removed = this.positionedTeamComp.indexOf(competition);
-          if (competition.character.health <= 0) {
-            this.positionedTeamComp.splice(removed, 1);
-            this.positioned = [
-              ...this.positionedTeamHuman,
-              ...this.positionedTeamComp,
-            ];
-            // if (this.positionedTeamComp.length === 0) {
-            //   alert("win");
-            // }
-          }
-          this.removeSelected();
+        if (allowedMove) {
+          this.positionedTeamHuman = [...this.positionedTeamHuman].filter(
+            (character) => character.position !== this.indexOfSelectedCharacter,
+          );
+          this.selectedCharacter.position = index;
+          this.positionedTeamHuman.push(this.selectedCharacter);
+          this.positioned = [
+            ...this.positionedTeamHuman,
+            ...this.positionedTeamComp,
+          ];
+          this.selectedCharacter = null;
+          this.indexOfSelectedCharacter = null;
           this.gamePlay.redrawPositions(this.positioned);
-        });
-
-        this.selectedCharacter = null;
-        this.indexOfSelectedCharacter = null;
+          this.removeSelected();
+          this.playersTurn = false;
+        } else {
+          GamePlay.showError('It is not allowed to move here');
+        }
+        this.computersMove();
       }
     }
-
-    if (!characterHere && this.selectedCharacter) {
-      const numOfSteps = this.findNumberOfSteps();
-      const allowedMove = possibleMove(
-        this.indexOfSelectedCharacter,
-        index,
-        numOfSteps,
-      );
-      if (allowedMove) {
-        this.positioned = [...this.positioned].filter(
-          (character) => character.position !== this.indexOfSelectedCharacter,
-        );
-        this.selectedCharacter.position = index;
-        this.positioned.push(this.selectedCharacter);
-        this.selectedCharacter = null;
-        this.indexOfSelectedCharacter = null;
-        this.gamePlay.redrawPositions(this.positioned);
-        this.removeSelected();
-        // this.playersTurn = false;
-      } else {
-        GamePlay.showError('It is not allowed to move here');
-      }
-    }
-    // }
   }
 
   removeSelected() {
@@ -176,8 +183,68 @@ export default class GameController {
     return this.selectedCharacter.character.moveDistance;
   }
 
-  // computersMove() {
-  //   alert("сходил");
-  //   this.playersTurn = true;
-  // }
+  computersMove() {
+    const index = Math.floor(Math.random() * this.positionedTeamComp.length);
+    const playingCharacter = this.positionedTeamComp[index];
+    const playingCharacterIndex = playingCharacter.position;
+    const numOfSteps = playingCharacter.character.moveDistance;
+    const possibleMoves = countPossibleIndexes(
+      playingCharacterIndex,
+      numOfSteps,
+    );
+    const humansPositions = this.positionedTeamHuman.map(
+      (element) => element.position,
+    );
+    // const compsPositions = this.positionedTeamComp.map(
+    //   (element) => element.position
+    // );
+
+    const possibleAttack = possibleMoves.filter(
+      (move) => humansPositions.indexOf(move) > -1,
+    );
+    let toAttack = null;
+    if (possibleAttack.length === 1) {
+      toAttack = possibleAttack[0];
+    } else if (possibleAttack.length > 1) {
+      toAttack = possibleAttack[Math.floor(Math.random() * possibleAttack.length)];
+    }
+
+    if (!toAttack) {
+      this.positionedTeamComp = [...this.positionedTeamComp].filter(
+        (character) => character.position !== playingCharacterIndex,
+      );
+
+      playingCharacter.position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+
+      this.positionedTeamComp.push(playingCharacter);
+      this.positioned = [
+        ...this.positionedTeamHuman,
+        ...this.positionedTeamComp,
+      ];
+      this.gamePlay.redrawPositions(this.positioned);
+    } else {
+      const enemy = this.findCharacterHere(toAttack);
+
+      const damageValue = Math.max(
+        playingCharacter.character.attack - enemy.character.defence,
+        playingCharacter.character.attack * 0.1,
+      );
+
+      const damage = this.gamePlay.showDamage(toAttack, damageValue);
+
+      damage.then(() => {
+        enemy.character.health -= damageValue;
+        const removed = this.positionedTeamHuman.indexOf(enemy);
+        if (enemy.character.health <= 0) {
+          this.positionedTeamHuman.splice(removed, 1);
+          this.positioned = [
+            ...this.positionedTeamHuman,
+            ...this.positionedTeamComp,
+          ];
+        }
+        this.gamePlay.redrawPositions(this.positioned);
+      });
+    }
+    this.playersTurn = true;
+  }
 }
