@@ -35,6 +35,11 @@ export default class GamePlay {
         <button data-id="action-save" class="btn">Save Game</button>
         <button data-id="action-load" class="btn">Load Game</button>
       </div>
+      <div class="game-info">
+        <span data-id="current-level">Current level: 1</span>
+        <span data-id="score">Current Score: 0</span>
+        <span data-id="best-score">Best Score: 0</span>
+      </div>
       <div class="board-container">
         <div data-id="board" class="board"></div>
       </div>
@@ -43,6 +48,8 @@ export default class GamePlay {
     this.newGameEl = this.container.querySelector('[data-id=action-restart]');
     this.saveGameEl = this.container.querySelector('[data-id=action-save]');
     this.loadGameEl = this.container.querySelector('[data-id=action-load]');
+
+    this.currentScore = this.container.querySelector('[data-id=score]');
 
     this.newGameEl.addEventListener('click', (event) => this.onNewGameClick(event));
     this.saveGameEl.addEventListener('click', (event) => this.onSaveGameClick(event));
@@ -53,7 +60,11 @@ export default class GamePlay {
     this.boardEl.classList.add(theme);
     for (let i = 0; i < this.boardSize ** 2; i += 1) {
       const cellEl = document.createElement('div');
-      cellEl.classList.add('cell', 'map-tile', `map-tile-${calcTileType(i, this.boardSize)}`);
+      cellEl.classList.add(
+        'cell',
+        'map-tile',
+        `map-tile-${calcTileType(i, this.boardSize)}`,
+      );
       cellEl.addEventListener('mouseenter', (event) => this.onCellEnter(event));
       cellEl.addEventListener('mouseleave', (event) => this.onCellLeave(event));
       cellEl.addEventListener('click', (event) => this.onCellClick(event));
@@ -82,7 +93,10 @@ export default class GamePlay {
       healthEl.classList.add('health-level');
 
       const healthIndicatorEl = document.createElement('div');
-      healthIndicatorEl.classList.add('health-level-indicator', `health-level-indicator-${calcHealthLevel(position.character.health)}`);
+      healthIndicatorEl.classList.add(
+        'health-level-indicator',
+        `health-level-indicator-${calcHealthLevel(position.character.health)}`,
+      );
       healthIndicatorEl.style.width = `${position.character.health}%`;
       healthEl.appendChild(healthIndicatorEl);
 
@@ -192,8 +206,9 @@ export default class GamePlay {
 
   deselectCell(index) {
     const cell = this.cells[index];
-    cell.classList.remove(...Array.from(cell.classList)
-      .filter((o) => o.startsWith('selected')));
+    cell.classList.remove(
+      ...Array.from(cell.classList).filter((o) => o.startsWith('selected')),
+    );
   }
 
   showCellTooltip(message, index) {
@@ -227,5 +242,9 @@ export default class GamePlay {
     if (this.container === null) {
       throw new Error('GamePlay not bind to DOM');
     }
+  }
+
+  setCurrentScore(points) {
+    this.currentScore.innerHTML = `Current Score: ${points}`;
   }
 }

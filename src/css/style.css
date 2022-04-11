@@ -2,7 +2,8 @@
   --cell-size: 64px;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }
@@ -19,17 +20,28 @@ body {
   background-color: #f8f9fa;
   text-align: center;
   vertical-align: middle;
-  padding: .375rem .75rem;
+  padding: 0.375rem 0.75rem;
   font-size: 1rem;
   line-height: 1.5;
-  border-radius: .25rem;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   border: none;
 }
 
 .controls {
   text-align: center;
-  margin: 50px 0;
+  margin: 20px 0;
+}
+
+.game-info {
+  text-align: center;
+  color: #fff;
+  margin: 20px 0;
+}
+
+.game-info span:nth-child(2n) {
+  margin: 0 20px;
 }
 
 .board-container {
@@ -51,7 +63,7 @@ body {
 }
 
 .cell.selected::before {
-  content: '';
+  content: "";
   display: block;
   border: 4px;
   border-radius: 32px;
@@ -78,51 +90,51 @@ body {
 }
 
 .board.prairie {
-  --map-tile-top-left-url: url('../img/prairie/map-tile-top-left.png');
-  --map-tile-top-url: url('../img/prairie/map-tile-top.png');
-  --map-tile-top-right-url: url('../img/prairie/map-tile-top-right.png');
-  --map-tile-bottom-left-url: url('../img/prairie/map-tile-bottom-left.png');
-  --map-tile-bottom-url: url('../img/prairie/map-tile-bottom.png');
-  --map-tile-bottom-right-url: url('../img/prairie/map-tile-bottom-right.png');
-  --map-tile-left-url: url('../img/prairie/map-tile-left.png');
-  --map-tile-right-url: url('../img/prairie/map-tile-right.png');
-  --map-tile-center-url: url('../img/prairie/map-tile-center.png');
+  --map-tile-top-left-url: url("../img/prairie/map-tile-top-left.png");
+  --map-tile-top-url: url("../img/prairie/map-tile-top.png");
+  --map-tile-top-right-url: url("../img/prairie/map-tile-top-right.png");
+  --map-tile-bottom-left-url: url("../img/prairie/map-tile-bottom-left.png");
+  --map-tile-bottom-url: url("../img/prairie/map-tile-bottom.png");
+  --map-tile-bottom-right-url: url("../img/prairie/map-tile-bottom-right.png");
+  --map-tile-left-url: url("../img/prairie/map-tile-left.png");
+  --map-tile-right-url: url("../img/prairie/map-tile-right.png");
+  --map-tile-center-url: url("../img/prairie/map-tile-center.png");
 }
 
 .board.desert {
-  --map-tile-top-left-url: url('../img/desert/map-tile-top-left.png');
-  --map-tile-top-url: url('../img/desert/map-tile-top.png');
-  --map-tile-top-right-url: url('../img/desert/map-tile-top-right.png');
-  --map-tile-bottom-left-url: url('../img/desert/map-tile-bottom-left.png');
-  --map-tile-bottom-url: url('../img/desert/map-tile-bottom.png');
-  --map-tile-bottom-right-url: url('../img/desert/map-tile-bottom-right.png');
-  --map-tile-left-url: url('../img/desert/map-tile-left.png');
-  --map-tile-right-url: url('../img/desert/map-tile-right.png');
-  --map-tile-center-url: url('../img/desert/map-tile-center.png');
+  --map-tile-top-left-url: url("../img/desert/map-tile-top-left.png");
+  --map-tile-top-url: url("../img/desert/map-tile-top.png");
+  --map-tile-top-right-url: url("../img/desert/map-tile-top-right.png");
+  --map-tile-bottom-left-url: url("../img/desert/map-tile-bottom-left.png");
+  --map-tile-bottom-url: url("../img/desert/map-tile-bottom.png");
+  --map-tile-bottom-right-url: url("../img/desert/map-tile-bottom-right.png");
+  --map-tile-left-url: url("../img/desert/map-tile-left.png");
+  --map-tile-right-url: url("../img/desert/map-tile-right.png");
+  --map-tile-center-url: url("../img/desert/map-tile-center.png");
 }
 
 .board.arctic {
-  --map-tile-top-left-url: url('../img/arctic/map-tile-top-left.png');
-  --map-tile-top-url: url('../img/arctic/map-tile-top.png');
-  --map-tile-top-right-url: url('../img/arctic/map-tile-top-right.png');
-  --map-tile-bottom-left-url: url('../img/arctic/map-tile-bottom-left.png');
-  --map-tile-bottom-url: url('../img/arctic/map-tile-bottom.png');
-  --map-tile-bottom-right-url: url('../img/arctic/map-tile-bottom-right.png');
-  --map-tile-left-url: url('../img/arctic/map-tile-left.png');
-  --map-tile-right-url: url('../img/arctic/map-tile-right.png');
-  --map-tile-center-url: url('../img/arctic/map-tile-center.png');
+  --map-tile-top-left-url: url("../img/arctic/map-tile-top-left.png");
+  --map-tile-top-url: url("../img/arctic/map-tile-top.png");
+  --map-tile-top-right-url: url("../img/arctic/map-tile-top-right.png");
+  --map-tile-bottom-left-url: url("../img/arctic/map-tile-bottom-left.png");
+  --map-tile-bottom-url: url("../img/arctic/map-tile-bottom.png");
+  --map-tile-bottom-right-url: url("../img/arctic/map-tile-bottom-right.png");
+  --map-tile-left-url: url("../img/arctic/map-tile-left.png");
+  --map-tile-right-url: url("../img/arctic/map-tile-right.png");
+  --map-tile-center-url: url("../img/arctic/map-tile-center.png");
 }
 
 .board.mountain {
-  --map-tile-top-left-url: url('../img/mountain/map-tile-top-left.png');
-  --map-tile-top-url: url('../img/mountain/map-tile-top.png');
-  --map-tile-top-right-url: url('../img/mountain/map-tile-top-right.png');
-  --map-tile-bottom-left-url: url('../img/mountain/map-tile-bottom-left.png');
-  --map-tile-bottom-url: url('../img/mountain/map-tile-bottom.png');
-  --map-tile-bottom-right-url: url('../img/mountain/map-tile-bottom-right.png');
-  --map-tile-left-url: url('../img/mountain/map-tile-left.png');
-  --map-tile-right-url: url('../img/mountain/map-tile-right.png');
-  --map-tile-center-url: url('../img/mountain/map-tile-center.png');
+  --map-tile-top-left-url: url("../img/mountain/map-tile-top-left.png");
+  --map-tile-top-url: url("../img/mountain/map-tile-top.png");
+  --map-tile-top-right-url: url("../img/mountain/map-tile-top-right.png");
+  --map-tile-bottom-left-url: url("../img/mountain/map-tile-bottom-left.png");
+  --map-tile-bottom-url: url("../img/mountain/map-tile-bottom.png");
+  --map-tile-bottom-right-url: url("../img/mountain/map-tile-bottom-right.png");
+  --map-tile-left-url: url("../img/mountain/map-tile-left.png");
+  --map-tile-right-url: url("../img/mountain/map-tile-right.png");
+  --map-tile-center-url: url("../img/mountain/map-tile-center.png");
 }
 
 .map-tile {
@@ -174,35 +186,35 @@ body {
 }
 
 .character.generic {
-  background: url('../img/characters/generic.png');
+  background: url("../img/characters/generic.png");
 }
 
 .character.bowman {
-  background: url('../img/characters/bowman.png');
+  background: url("../img/characters/bowman.png");
 }
 
 .character.daemon {
-  background: url('../img/characters/daemon.png');
+  background: url("../img/characters/daemon.png");
 }
 
 .character.magician {
-  background: url('../img/characters/magician.png');
+  background: url("../img/characters/magician.png");
 }
 
 .character.swordsman {
-  background: url('../img/characters/swordsman.png');
+  background: url("../img/characters/swordsman.png");
 }
 
 .character.undead {
-  background: url('../img/characters/undead.png');
+  background: url("../img/characters/undead.png");
 }
 
 .character.vampire {
-  background: url('../img/characters/vampire.png');
+  background: url("../img/characters/vampire.png");
 }
 
 .character.zombie {
-  background: url('../img/characters/zombie.png');
+  background: url("../img/characters/zombie.png");
 }
 
 .health-level {

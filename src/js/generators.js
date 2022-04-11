@@ -44,10 +44,9 @@ export function generatePosition(team, side, boardSize = 8) {
     const index = Math.floor(Math.random() * possibleCells.length);
     const position = possibleCells[index];
 
+    possibleCells.splice(index, 1);
+
     positionedCharacters.push(new PositionedCharacter(team[i], position));
-    if (i === 1 && position === positionedCharacters[0].position) {
-      i = 0;
-    }
   }
 
   return positionedCharacters;

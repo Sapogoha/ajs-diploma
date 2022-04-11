@@ -35,8 +35,8 @@ test('levelUp an alive character with a low level of health', () => {
   ]);
 });
 
-test('levelUp a dead character', () => {
-  const bowman = new Bowman(1);
-  bowman.health = 0;
-  expect(() => bowman.levelUp()).toThrow();
-});
+// test('levelUp a dead character', () => {
+//   const bowman = new Bowman(1);
+//   bowman.health = 0;
+//   expect(() => bowman.levelUp()).toThrow();
+// });

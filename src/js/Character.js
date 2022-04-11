@@ -24,8 +24,8 @@ export default class Character {
         Math.round(this.defence * (0.8 + this.health / 100)),
       );
       this.health < 20 ? (this.health += 80) : (this.health = 100);
-    } else {
-      throw new Error('You cannot level up a dead character');
+      // } else {
+      //   throw new Error("You cannot level up a dead character");
     }
   }
 }

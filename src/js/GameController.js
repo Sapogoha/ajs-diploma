@@ -2,7 +2,11 @@ import themes from './themes';
 import cursors from './cursors';
 import { possibleMove, countPossibleIndexes } from './utils';
 
-import { generateTeam, generatePosition } from './generators';
+import {
+  generateTeam,
+  generatePosition,
+  characterGenerator,
+} from './generators';
 
 import Team from './Team';
 import GamePlay from './GamePlay';
@@ -16,7 +20,7 @@ export default class GameController {
     this.playersTurn = true;
     this.previouslySelected = null;
     this.level = 1;
-    // this.points = 0;
+    this.points = 0;
   }
 
   init() {
@@ -26,7 +30,7 @@ export default class GameController {
   }
 
   drawCharacters() {
-    this.teamHuman = generateTeam(new Team().teamHuman, 1, 2);
+    this.teamHuman = generateTeam(new Team().teamHumanFirstLevel, 1, 2);
     this.teamComp = generateTeam(new Team().teamComp, 1, 2);
     this.positionedTeamHuman = generatePosition(this.teamHuman, 'human');
     this.positionedTeamComp = generatePosition(this.teamComp, 'comp');
@@ -56,8 +60,8 @@ export default class GameController {
     }
 
     if (this.indexOfSelectedCharacter && this.selectedCharacter) {
-      const numOfStepsToMove = this.selectedCharacter.character.moveDistance;
-      const numOfStepsToAttack = this.selectedCharacter.character.attackDistance;
+      const numOfStepsToMove = this.findNumberOfStepsToMove();
+      const numOfStepsToAttack = this.findNumberOfStepsToAttack();
 
       if (numOfStepsToMove || numOfStepsToAttack) {
         const allowedMove = possibleMove(
@@ -113,7 +117,7 @@ export default class GameController {
       }
     } else if (!this.selectedCharacter) {
       GamePlay.showError(
-        'There is no character here. Choose a cell with a character',
+        'There is no character here. Choose any cell with a character',
       );
     }
 
@@ -151,15 +155,11 @@ export default class GameController {
               ...this.positionedTeamComp,
             ];
             if (this.positionedTeamComp.length === 0) {
-              alert('win');
-              // for (let i = 0; i < this.positionedTeamHuman.length; i++) {
-              //   this.points += this.positionedTeamHuman[i].character.health;
-              // }
-              // this.level += 1;
-              // alert(this.points);
-              // this.init();
+              this.playersTurn = true;
+              this.levelUp();
             }
           }
+
           this.removeSelected();
           this.gamePlay.redrawPositions(this.positioned);
           this.computersMove();
@@ -216,6 +216,10 @@ export default class GameController {
 
   findNumberOfStepsToMove() {
     return this.selectedCharacter.character.moveDistance;
+  }
+
+  findNumberOfStepsToAttack() {
+    return this.selectedCharacter.character.attackDistance;
   }
 
   computersMove() {
@@ -296,5 +300,36 @@ export default class GameController {
     } else {
       this.playersTurn = true;
     }
+  }
+
+  levelUp() {
+    this.points += this.positionedTeamHuman
+      .map((element) => element.character.health)
+      .reduce((sum, number) => sum + number);
+
+    this.level += 1;
+    this.gamePlay.drawUi(Object.values(themes)[this.level - 1]);
+    this.gamePlay.setCurrentScore(this.points);
+    this.positioned.forEach((character) => character.character.levelUp());
+
+    this.teamHuman = this.positionedTeamHuman.map(
+      (element) => element.character,
+    );
+    this.teamHuman.push(
+      characterGenerator(new Team().teamHuman, this.level - 1).next().value,
+    );
+
+    this.positionedTeamHuman = generatePosition(this.teamHuman, 'human');
+
+    this.teamComp = generateTeam(
+      new Team().teamComp,
+      this.level,
+      this.positionedTeamHuman.length,
+    );
+
+    this.positionedTeamComp = generatePosition(this.teamComp, 'comp');
+
+    this.positioned = [...this.positionedTeamHuman, ...this.positionedTeamComp];
+    this.gamePlay.redrawPositions(this.positioned);
   }
 }
