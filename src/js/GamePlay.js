@@ -37,7 +37,7 @@ export default class GamePlay {
       </div>
       <div class="game-info">
         <span data-id="current-level">Current level: 1</span>
-        <span data-id="score">Current Score: 0</span>
+        <span data-id="current-score">Current Score: 0</span>
         <span data-id="best-score">Best Score: 0</span>
       </div>
       <div class="board-container">
@@ -49,7 +49,9 @@ export default class GamePlay {
     this.saveGameEl = this.container.querySelector('[data-id=action-save]');
     this.loadGameEl = this.container.querySelector('[data-id=action-load]');
 
-    this.currentScore = this.container.querySelector('[data-id=score]');
+    this.currentLevel = this.container.querySelector('[data-id=current-level]');
+    this.currentScore = this.container.querySelector('[data-id=current-score]');
+    this.bestScore = this.container.querySelector('[data-id=best-score]');
 
     this.newGameEl.addEventListener('click', (event) => this.onNewGameClick(event));
     this.saveGameEl.addEventListener('click', (event) => this.onSaveGameClick(event));
@@ -244,7 +246,15 @@ export default class GamePlay {
     }
   }
 
+  setCurrentLevel(level) {
+    this.currentLevel.innerHTML = `Current Level: ${level}`;
+  }
+
   setCurrentScore(points) {
     this.currentScore.innerHTML = `Current Score: ${points}`;
+  }
+
+  setBestScore(highestPoints) {
+    this.bestScore.innerHTML = `Best Score: ${highestPoints}`;
   }
 }
