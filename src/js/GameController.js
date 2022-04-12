@@ -16,21 +16,21 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
-    // this.state = GameState.from({});
+    this.gameState = new GameState();
     this.selectedCharacter = false;
     this.indexOfSelectedCharacter = null;
-    this.playersTurn = true;
     this.previouslySelected = null;
 
+    this.playersTurn = true;
     this.level = 1;
     this.points = 0;
-    this.highestPoints = null;
   }
 
   init() {
     this.gamePlay.drawUi(Object.values(themes)[this.level - 1]);
     this.drawCharacters();
     this.addListeners();
+    this.gamePlay.setBestScore(this.gameState.highestPoints);
   }
 
   drawCharacters() {
@@ -322,12 +322,12 @@ export default class GameController {
         .map((element) => element.character.health)
         .reduce((sum, number) => sum + number);
 
-      if (this.highestPoints < this.points) {
-        this.highestPoints = this.points;
+      if (this.gameState.highestPoints < this.points) {
+        this.gameState.highestPoints = this.points;
       }
 
       this.gamePlay.setCurrentScore(this.points);
-      this.gamePlay.setBestScore(this.highestPoints);
+      this.gamePlay.setBestScore(this.gameState.highestPoints);
 
       if (this.level < 4) {
         this.level += 1;
@@ -335,7 +335,7 @@ export default class GameController {
 
         this.gamePlay.setCurrentLevel(this.level);
         this.gamePlay.setCurrentScore(this.points);
-        this.gamePlay.setBestScore(this.highestPoints);
+        this.gamePlay.setBestScore(this.gameState.highestPoints);
         this.positioned.forEach((character) => character.character.levelUp());
 
         this.teamHuman = this.positionedTeamHuman.map(
@@ -361,14 +361,21 @@ export default class GameController {
         ];
         this.gamePlay.redrawPositions(this.positioned);
       } else {
-        alert('it was level 4');
+        alert('This was the last level');
       }
     }
   }
 
   onNewGameClick() {
-    this.gameState = new GameState();
+    this.selectedCharacter = false;
+    this.indexOfSelectedCharacter = null;
+    this.previouslySelected = null;
+    this.playersTurn = true;
     this.level = 1;
+    this.points = 0;
+    this.gamePlay.cellClickListeners = [];
+    this.gamePlay.cellEnterListeners = [];
+    this.gamePlay.cellLeaveListeners = [];
 
     this.init();
   }
