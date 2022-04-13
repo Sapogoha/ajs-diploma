@@ -5,11 +5,7 @@ export default class GameState {
     this.points = 0;
     this.highestPoints = 0;
 
-    this.teamHuman = [];
-    this.teamComp = [];
-    this.posTeamHuman = [];
-    this.posTeamComp = [];
-    this.positioned = null;
+    this.positioned = [];
   }
 
   static from(object) {

@@ -12,6 +12,14 @@ import Team from './Team';
 import GamePlay from './GamePlay';
 import GameState from './GameState';
 
+import Bowman from './characters/Bowman';
+import Daemon from './characters/Daemon';
+import Magician from './characters/Magician';
+import Swordsman from './characters/Swordsman';
+import Undead from './characters/Undead';
+import Vampire from './characters/Vampire';
+import PositionedCharacter from './PositionedCharacter';
+
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
@@ -23,28 +31,24 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi(Object.values(themes)[this.gameState.level - 1]);
+    this.prepareBoard();
     this.drawCharacters();
+  }
+
+  prepareBoard() {
+    this.gamePlay.drawUi(Object.values(themes)[this.gameState.level - 1]);
+    this.removeListeners();
     this.addListeners();
     this.showStats();
   }
 
   drawCharacters() {
-    this.gameState.teamHuman = generateTeam(new Team().teamHumanInit, 1, 2);
-    this.gameState.teamComp = generateTeam(new Team().teamComp, 1, 2);
-    this.gameState.posTeamHuman = generatePosition(
-      this.gameState.teamHuman,
-      'human',
-    );
-    this.gameState.posTeamComp = generatePosition(
-      this.gameState.teamComp,
-      'comp',
-    );
+    this.teamHuman = generateTeam(new Team().teamHumanInit, 1, 2);
+    this.teamComp = generateTeam(new Team().teamComp, 1, 2);
+    this.posTeamHuman = generatePosition(this.teamHuman, 'human');
+    this.posTeamComp = generatePosition(this.teamComp, 'comp');
 
-    this.gameState.positioned = [
-      ...this.gameState.posTeamHuman,
-      ...this.gameState.posTeamComp,
-    ];
+    this.gameState.positioned = [...this.posTeamHuman, ...this.posTeamComp];
 
     this.gamePlay.redrawPositions(this.gameState.positioned);
   }
@@ -83,14 +87,15 @@ export default class GameController {
             this.gamePlay.selectCell(index, 'green');
             this.gamePlay.setCursor(cursors.pointer);
           }
+          if (!allowedMove) {
+            this.gamePlay.setCursor(cursors.notallowed);
+          }
           if (characterHere?.character.team === 'comp' && allowedAttack) {
             this.gamePlay.selectCell(index, 'red');
             this.gamePlay.setCursor(cursors.crosshair);
           } else if (characterHere?.character.team === 'human') {
             this.gamePlay.selectCell(index, '');
           }
-        } else {
-          this.gamePlay.setCursor(cursors.notallowed);
         }
       }
     }
@@ -105,130 +110,131 @@ export default class GameController {
   }
 
   onCellClick(index) {
-    if (
-      this.gameState.posTeamHuman.length > 0
-      && this.gameState.level <= 4
-      && this.gameState.posTeamComp.length !== 0
-    ) {
-      const characterHere = this.findCharacterHere(index);
-      if (characterHere) {
-        const { team } = characterHere.character;
-        if (team === 'comp' && !this.selectedCharacter) {
-          GamePlay.showError('It is not your character. Choose yours');
-          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-        } else {
-          this.previouslySelected = this.selectedCharacter;
-          this.selectedCharacter = characterHere;
-          this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
-          this.gamePlay.selectCell(index);
-          this.indexOfSelectedCharacter = index;
-          this.gamePlay.setCursor(cursors.pointer);
+    if (this.gameState.playersTurn) {
+      if (
+        this.posTeamHuman.length > 0
+        && this.gameState.level <= 4
+        && this.posTeamComp.length !== 0
+      ) {
+        const characterHere = this.findCharacterHere(index);
+        if (characterHere) {
+          const { team } = characterHere.character;
+          if (team === 'comp' && !this.selectedCharacter) {
+            GamePlay.showError('It is not your character. Choose yours');
+            this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+          } else {
+            this.previouslySelected = this.selectedCharacter;
+            this.selectedCharacter = characterHere;
+            this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
+            this.gamePlay.selectCell(index);
+            this.indexOfSelectedCharacter = index;
+            this.gamePlay.setCursor(cursors.pointer);
+          }
+        } else if (!this.selectedCharacter) {
+          GamePlay.showError(
+            'There is no character here. Choose any cell with a character',
+          );
         }
-      } else if (!this.selectedCharacter) {
-        GamePlay.showError(
-          'There is no character here. Choose any cell with a character',
-        );
-      }
 
-      if (this.previouslySelected && characterHere) {
-        const numOfSteps = this.previouslySelected.character.attackDistance;
+        if (this.previouslySelected && characterHere) {
+          const numOfSteps = this.previouslySelected.character.attackDistance;
 
-        const allowedAttack = possibleMove(
-          this.previouslySelected.position,
-          index,
-          numOfSteps,
-        );
-        const { team } = characterHere.character;
-        if (team === 'human') {
-          GamePlay.showMessage(
-            'You have chosen another character from your team. Now chose its move',
+          const allowedAttack = possibleMove(
+            this.previouslySelected.position,
+            index,
+            numOfSteps,
           );
-          this.gamePlay.selectCell(index);
-        } else if (allowedAttack) {
-          const competition = characterHere;
-          const damageValue = Math.max(
-            this.selectedCharacter.character.attack
-              - competition.character.defence,
-            this.selectedCharacter.character.attack * 0.1,
-          );
-          const damage = this.gamePlay.showDamage(index, damageValue);
+          const { team } = characterHere.character;
+          if (team === 'human') {
+            this.gamePlay.deselectCell(this.indexOfSelectedCharacter);
+            this.gamePlay.selectCell(index);
+          } else if (allowedAttack) {
+            const competition = characterHere;
+            const damageValue = Math.max(
+              this.selectedCharacter.character.attack
+                - competition.character.defence,
+              this.selectedCharacter.character.attack * 0.1,
+            );
+            const damage = this.gamePlay.showDamage(index, damageValue);
 
-          damage.then(() => {
-            competition.character.health -= damageValue;
+            damage.then(() => {
+              competition.character.health -= damageValue;
 
-            const removed = this.gameState.posTeamComp.indexOf(competition);
-            if (competition.character.health <= 0) {
-              this.gameState.posTeamComp.splice(removed, 1);
-              this.gameState.positioned = [
-                ...this.gameState.posTeamHuman,
-                ...this.gameState.posTeamComp,
-              ];
-              if (this.gameState.posTeamComp.length === 0) {
-                this.gameState.playersTurn = true;
-                this.levelUp();
+              const removed = this.posTeamComp.indexOf(competition);
+              if (competition.character.health <= 0) {
+                this.posTeamComp.splice(removed, 1);
+                this.gameState.positioned = [
+                  ...this.posTeamHuman,
+                  ...this.posTeamComp,
+                ];
+                if (this.posTeamComp.length === 0) {
+                  this.gameState.playersTurn = true;
+                  this.levelUp();
+                }
               }
-            }
 
+              this.removeSelected();
+              this.gamePlay.redrawPositions(this.gameState.positioned);
+              this.computersMove();
+            });
+
+            this.selectedCharacter = null;
+            this.indexOfSelectedCharacter = null;
+            this.gameState.playersTurn = false;
+          } else {
+            GamePlay.showError('It is too far to attack this character');
+            this.selectedCharacter = null;
+            this.previouslySelected = null;
             this.removeSelected();
-            this.gamePlay.redrawPositions(this.gameState.positioned);
             this.computersMove();
-          });
+          }
+        }
 
-          this.selectedCharacter = null;
-          this.indexOfSelectedCharacter = null;
-          this.gameState.playersTurn = false;
-        } else {
-          GamePlay.showError('It is too far to attack this character');
-          this.selectedCharacter = null;
-          this.previouslySelected = null;
-          this.removeSelected();
+        if (!characterHere && this.selectedCharacter) {
+          const numOfSteps = this.findNumberOfStepsToMove();
+          const allowedMove = possibleMove(
+            this.indexOfSelectedCharacter,
+            index,
+            numOfSteps,
+          );
+          if (allowedMove) {
+            this.posTeamHuman = [...this.posTeamHuman].filter(
+              (character) => character.position !== this.indexOfSelectedCharacter,
+            );
+            this.selectedCharacter.position = index;
+            this.posTeamHuman.push(this.selectedCharacter);
+            this.gameState.positioned = [
+              ...this.posTeamHuman,
+              ...this.posTeamComp,
+            ];
+            this.selectedCharacter = null;
+            this.indexOfSelectedCharacter = null;
+            this.gamePlay.redrawPositions(this.gameState.positioned);
+            this.removeSelected();
+            this.gameState.playersTurn = false;
+          } else {
+            GamePlay.showError('It is not allowed to move there');
+          }
           this.computersMove();
         }
       }
-
-      if (!characterHere && this.selectedCharacter) {
-        const numOfSteps = this.findNumberOfStepsToMove();
-        const allowedMove = possibleMove(
-          this.indexOfSelectedCharacter,
-          index,
-          numOfSteps,
-        );
-        if (allowedMove) {
-          this.gameState.posTeamHuman = [...this.gameState.posTeamHuman].filter(
-            (character) => character.position !== this.indexOfSelectedCharacter,
-          );
-          this.selectedCharacter.position = index;
-          this.gameState.posTeamHuman.push(this.selectedCharacter);
-          this.gameState.positioned = [
-            ...this.gameState.posTeamHuman,
-            ...this.gameState.posTeamComp,
-          ];
-          this.selectedCharacter = null;
-          this.indexOfSelectedCharacter = null;
-          this.gamePlay.redrawPositions(this.gameState.positioned);
-          this.removeSelected();
-          this.gameState.playersTurn = false;
-        } else {
-          GamePlay.showError('It is not allowed to move there');
-        }
-        this.computersMove();
-      }
+    } else {
+      GamePlay.showError('It is not your turn yet');
     }
   }
 
   async computersMove() {
     if (!this.gameState.playersTurn) {
-      const index = Math.floor(
-        Math.random() * this.gameState.posTeamComp.length,
-      );
-      const playingCharacter = this.gameState.posTeamComp[index];
+      await setTimer(300);
+      const index = Math.floor(Math.random() * this.posTeamComp.length);
+      const playingCharacter = this.posTeamComp[index];
       const playingCharacterIndex = playingCharacter.position;
       const numOfStepsToMove = playingCharacter.character.moveDistance;
       const numOfStepsToAttack = playingCharacter.character.attackDistance;
-      const humansPositions = this.gameState.posTeamHuman.map(
+      const humansPositions = this.posTeamHuman.map(
         (element) => element.position,
       );
-      const compsPositions = this.gameState.posTeamComp.map(
+      const compsPositions = this.posTeamComp.map(
         (element) => element.position,
       );
       const possibleMoves = countPossibleIndexes(
@@ -254,7 +260,7 @@ export default class GameController {
       }
 
       if (!toAttack) {
-        this.gameState.posTeamComp = [...this.gameState.posTeamComp].filter(
+        this.posTeamComp = [...this.posTeamComp].filter(
           (character) => character.position !== playingCharacterIndex,
         );
 
@@ -268,11 +274,8 @@ export default class GameController {
         await setTimer(300);
         this.gamePlay.deselectCell(playingCharacter.position);
 
-        this.gameState.posTeamComp.push(playingCharacter);
-        this.gameState.positioned = [
-          ...this.gameState.posTeamHuman,
-          ...this.gameState.posTeamComp,
-        ];
+        this.posTeamComp.push(playingCharacter);
+        this.gameState.positioned = [...this.posTeamHuman, ...this.posTeamComp];
 
         this.gamePlay.redrawPositions(this.gameState.positioned);
       } else {
@@ -293,14 +296,14 @@ export default class GameController {
 
         damage.then(() => {
           enemy.character.health -= damageValue;
-          const removed = this.gameState.posTeamHuman.indexOf(enemy);
+          const removed = this.posTeamHuman.indexOf(enemy);
           if (enemy.character.health <= 0) {
-            this.gameState.posTeamHuman.splice(removed, 1);
+            this.posTeamHuman.splice(removed, 1);
             this.gameState.positioned = [
-              ...this.gameState.posTeamHuman,
-              ...this.gameState.posTeamComp,
+              ...this.posTeamHuman,
+              ...this.posTeamComp,
             ];
-            if (this.gameState.posTeamHuman.length === 0) {
+            if (this.posTeamHuman.length === 0) {
               GamePlay.showMessage('You lost. Better luck next time');
             }
           }
@@ -318,7 +321,7 @@ export default class GameController {
 
   levelUp() {
     if (this.gameState.level <= 4) {
-      this.gameState.points += this.gameState.posTeamHuman
+      this.gameState.points += this.posTeamHuman
         .map((element) => element.character.health)
         .reduce((sum, number) => sum + number);
 
@@ -330,45 +333,32 @@ export default class GameController {
 
       if (this.gameState.level < 4) {
         this.gameState.level += 1;
-        this.gamePlay.drawUi(Object.values(themes)[this.gameState.level - 1]);
-
-        this.showStats();
-
+        this.prepareBoard();
         this.gameState.positioned.forEach((character) => character.character.levelUp());
 
-        this.gameState.teamHuman = this.gameState.posTeamHuman.map(
-          (element) => element.character,
-        );
-        this.gameState.teamHuman.push(
+        this.teamHuman = this.posTeamHuman.map((element) => element.character);
+        this.teamHuman.push(
           characterGenerator(
             new Team().teamHuman,
             this.gameState.level - 1,
           ).next().value,
         );
 
-        this.gameState.posTeamHuman = generatePosition(
-          this.gameState.teamHuman,
-          'human',
-        );
+        this.posTeamHuman = generatePosition(this.teamHuman, 'human');
 
-        this.gameState.teamComp = generateTeam(
+        this.teamComp = generateTeam(
           new Team().teamComp,
           this.gameState.level,
-          this.gameState.posTeamHuman.length,
+          this.posTeamHuman.length,
         );
 
-        this.gameState.posTeamComp = generatePosition(
-          this.gameState.teamComp,
-          'comp',
-        );
+        this.posTeamComp = generatePosition(this.teamComp, 'comp');
 
-        this.gameState.positioned = [
-          ...this.gameState.posTeamHuman,
-          ...this.gameState.posTeamComp,
-        ];
+        this.gameState.positioned = [...this.posTeamHuman, ...this.posTeamComp];
+
         this.gamePlay.redrawPositions(this.gameState.positioned);
       } else {
-        alert('This was the last level');
+        alert('Congrats! This was the last level');
       }
     }
   }
@@ -389,33 +379,61 @@ export default class GameController {
   }
 
   onLoadGame() {
-    let loadState = null;
     try {
-      loadState = this.stateService.load();
+      const loadState = this.stateService.load();
+      const types = {
+        swordsman: Swordsman,
+        bowman: Bowman,
+        magician: Magician,
+        daemon: Daemon,
+        undead: Undead,
+        vampire: Vampire,
+      };
+
+      this.deselect();
+
+      this.gameState.level = loadState.level;
+      this.gameState.points = loadState.points;
+      this.gameState.highestPoints = loadState.highestPoints;
+      this.gameState.playersTurn = loadState.playersTurn;
+      this.prepareBoard();
+
+      this.gameState.positioned = loadState.positioned.map((item) => {
+        const {
+          attack,
+          attackDistance,
+          defence,
+          health,
+          level,
+          moveDistance,
+          team,
+          type,
+        } = item.character;
+
+        const character = new types[type](level);
+
+        character.attack = attack;
+        character.attackDistance = attackDistance;
+        character.defence = defence;
+        character.health = health;
+        character.moveDistance = moveDistance;
+        character.team = team;
+
+        return new PositionedCharacter(character, item.position);
+      });
+
+      this.posTeamHuman = this.gameState.positioned.filter(
+        (character) => character.character.team === 'human',
+      );
+      this.posTeamComp = this.gameState.positioned.filter(
+        (character) => character.character.team === 'comp',
+      );
 
       GamePlay.showMessage('Loaded');
     } catch (err) {
       GamePlay.showError('Something went wrong');
       return;
     }
-
-    this.deselect();
-
-    this.gameState.level = loadState.level;
-    this.gameState.points = loadState.points;
-    this.gameState.highestPoints = loadState.highestPoints;
-    this.gameState.playersTurn = loadState.playersTurn;
-    this.init();
-    this.gameState.teamHuman = loadState.teamHuman;
-    this.gameState.teamComp = loadState.teamComp;
-    this.gameState.posTeamHuman = loadState.posTeamHuman;
-    this.gameState.posTeamComp = loadState.posTeamComp;
-    this.gameState.positioned = loadState.positioned;
-
-    // console.log('posTeamHuman');
-    // console.log(this.gameState.posTeamHuman);
-    // console.log('pos');
-    // console.log(this.gameState.positioned);
 
     this.gamePlay.redrawPositions(this.gameState.positioned);
   }
