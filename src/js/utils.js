@@ -104,3 +104,11 @@ export function possibleMove(currentIndex, futureIndex, moveDistance) {
 
   return countedPossibleIndexes.includes(futureIndex);
 }
+
+export function setTimer(time) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, time);
+  });
+}

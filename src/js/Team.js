@@ -8,7 +8,7 @@ import Vampire from './characters/Vampire';
 export default class Team {
   constructor() {
     this.teamComp = [Daemon, Undead, Vampire];
-    this.teamHumanFirstLevel = [Bowman, Swordsman];
+    this.teamHumanInit = [Bowman, Swordsman];
     this.teamHuman = [Bowman, Magician, Swordsman];
   }
 }

@@ -1,6 +1,6 @@
 import themes from './themes';
 import cursors from './cursors';
-import { possibleMove, countPossibleIndexes } from './utils';
+import { possibleMove, countPossibleIndexes, setTimer } from './utils';
 
 import {
   generateTeam,
@@ -26,16 +26,11 @@ export default class GameController {
     this.gamePlay.drawUi(Object.values(themes)[this.gameState.level - 1]);
     this.drawCharacters();
     this.addListeners();
-    this.gamePlay.setCurrentScore(this.gameState.points);
-    this.gamePlay.setBestScore(this.gameState.highestPoints);
+    this.showStats();
   }
 
   drawCharacters() {
-    this.gameState.teamHuman = generateTeam(
-      new Team().teamHumanFirstLevel,
-      1,
-      2,
-    );
+    this.gameState.teamHuman = generateTeam(new Team().teamHumanInit, 1, 2);
     this.gameState.teamComp = generateTeam(new Team().teamComp, 1, 2);
     this.gameState.posTeamHuman = generatePosition(
       this.gameState.teamHuman,
@@ -46,21 +41,12 @@ export default class GameController {
       'comp',
     );
 
-    this.positioned = [
+    this.gameState.positioned = [
       ...this.gameState.posTeamHuman,
       ...this.gameState.posTeamComp,
     ];
-    this.gamePlay.redrawPositions(this.positioned);
-  }
 
-  addListeners() {
-    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
-    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-
-    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
-    this.gamePlay.addSaveGameListener(this.onSaveGameClick.bind(this));
-    this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+    this.gamePlay.redrawPositions(this.gameState.positioned);
   }
 
   onCellEnter(index) {
@@ -173,7 +159,7 @@ export default class GameController {
             const removed = this.gameState.posTeamComp.indexOf(competition);
             if (competition.character.health <= 0) {
               this.gameState.posTeamComp.splice(removed, 1);
-              this.positioned = [
+              this.gameState.positioned = [
                 ...this.gameState.posTeamHuman,
                 ...this.gameState.posTeamComp,
               ];
@@ -184,7 +170,7 @@ export default class GameController {
             }
 
             this.removeSelected();
-            this.gamePlay.redrawPositions(this.positioned);
+            this.gamePlay.redrawPositions(this.gameState.positioned);
             this.computersMove();
           });
 
@@ -213,13 +199,13 @@ export default class GameController {
           );
           this.selectedCharacter.position = index;
           this.gameState.posTeamHuman.push(this.selectedCharacter);
-          this.positioned = [
+          this.gameState.positioned = [
             ...this.gameState.posTeamHuman,
             ...this.gameState.posTeamComp,
           ];
           this.selectedCharacter = null;
           this.indexOfSelectedCharacter = null;
-          this.gamePlay.redrawPositions(this.positioned);
+          this.gamePlay.redrawPositions(this.gameState.positioned);
           this.removeSelected();
           this.gameState.playersTurn = false;
         } else {
@@ -230,23 +216,7 @@ export default class GameController {
     }
   }
 
-  removeSelected() {
-    this.gamePlay.cells.forEach((cell) => cell.classList.remove('selected-yellow', 'selected-green', 'selected-red'));
-  }
-
-  findCharacterHere(index) {
-    return this.positioned.find((character) => character.position === index);
-  }
-
-  findNumberOfStepsToMove() {
-    return this.selectedCharacter.character.moveDistance;
-  }
-
-  findNumberOfStepsToAttack() {
-    return this.selectedCharacter.character.attackDistance;
-  }
-
-  computersMove() {
+  async computersMove() {
     if (!this.gameState.playersTurn) {
       const index = Math.floor(
         Math.random() * this.gameState.posTeamComp.length,
@@ -288,18 +258,23 @@ export default class GameController {
           (character) => character.position !== playingCharacterIndex,
         );
 
+        this.gamePlay.selectCell(playingCharacter.position);
+        await setTimer(300);
+        this.gamePlay.deselectCell(playingCharacter.position);
+
         playingCharacter.position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 
-        this.gamePlay.selectCell(playingCharacter.position);
+        this.gamePlay.selectCell(playingCharacter.position, 'green');
+        await setTimer(300);
+        this.gamePlay.deselectCell(playingCharacter.position);
 
         this.gameState.posTeamComp.push(playingCharacter);
-        this.positioned = [
+        this.gameState.positioned = [
           ...this.gameState.posTeamHuman,
           ...this.gameState.posTeamComp,
         ];
 
-        this.gamePlay.redrawPositions(this.positioned);
-        this.gamePlay.deselectCell(playingCharacter.position);
+        this.gamePlay.redrawPositions(this.gameState.positioned);
       } else {
         const enemy = this.findCharacterHere(toAttack);
 
@@ -309,14 +284,19 @@ export default class GameController {
         );
 
         this.gamePlay.selectCell(playingCharacter.position);
+        await setTimer(300);
+        this.gamePlay.selectCell(toAttack, 'red');
+
         const damage = this.gamePlay.showDamage(toAttack, damageValue);
+
+        this.gamePlay.deselectCell(playingCharacter.position);
 
         damage.then(() => {
           enemy.character.health -= damageValue;
           const removed = this.gameState.posTeamHuman.indexOf(enemy);
           if (enemy.character.health <= 0) {
             this.gameState.posTeamHuman.splice(removed, 1);
-            this.positioned = [
+            this.gameState.positioned = [
               ...this.gameState.posTeamHuman,
               ...this.gameState.posTeamComp,
             ];
@@ -325,9 +305,9 @@ export default class GameController {
             }
           }
 
-          this.gamePlay.redrawPositions(this.positioned);
+          this.gamePlay.redrawPositions(this.gameState.positioned);
 
-          this.gamePlay.deselectCell(playingCharacter.position);
+          this.gamePlay.deselectCell(toAttack);
         });
       }
       this.gameState.playersTurn = true;
@@ -346,17 +326,15 @@ export default class GameController {
         this.gameState.highestPoints = this.gameState.points;
       }
 
-      this.gamePlay.setCurrentScore(this.gameState.points);
-      this.gamePlay.setBestScore(this.gameState.highestPoints);
+      this.showStats();
 
       if (this.gameState.level < 4) {
         this.gameState.level += 1;
         this.gamePlay.drawUi(Object.values(themes)[this.gameState.level - 1]);
 
-        this.gamePlay.setCurrentLevel(this.gameState.level);
-        this.gamePlay.setCurrentScore(this.gameState.points);
-        this.gamePlay.setBestScore(this.gameState.highestPoints);
-        this.positioned.forEach((character) => character.character.levelUp());
+        this.showStats();
+
+        this.gameState.positioned.forEach((character) => character.character.levelUp());
 
         this.gameState.teamHuman = this.gameState.posTeamHuman.map(
           (element) => element.character,
@@ -384,11 +362,11 @@ export default class GameController {
           'comp',
         );
 
-        this.positioned = [
+        this.gameState.positioned = [
           ...this.gameState.posTeamHuman,
           ...this.gameState.posTeamComp,
         ];
-        this.gamePlay.redrawPositions(this.positioned);
+        this.gamePlay.redrawPositions(this.gameState.positioned);
       } else {
         alert('This was the last level');
       }
@@ -396,15 +374,10 @@ export default class GameController {
   }
 
   onNewGameClick() {
-    this.selectedCharacter = false;
-    this.indexOfSelectedCharacter = null;
-    this.previouslySelected = null;
+    this.deselect();
     this.gameState.playersTurn = true;
     this.gameState.level = 1;
     this.gameState.points = 0;
-    this.gamePlay.cellClickListeners = [];
-    this.gamePlay.cellEnterListeners = [];
-    this.gamePlay.cellLeaveListeners = [];
 
     this.init();
   }
@@ -419,11 +392,14 @@ export default class GameController {
     let loadState = null;
     try {
       loadState = this.stateService.load();
+
       GamePlay.showMessage('Loaded');
     } catch (err) {
       GamePlay.showError('Something went wrong');
       return;
     }
+
+    this.deselect();
 
     this.gameState.level = loadState.level;
     this.gameState.points = loadState.points;
@@ -434,11 +410,63 @@ export default class GameController {
     this.gameState.teamComp = loadState.teamComp;
     this.gameState.posTeamHuman = loadState.posTeamHuman;
     this.gameState.posTeamComp = loadState.posTeamComp;
-    this.positioned = [
-      ...this.gameState.posTeamHuman,
-      ...this.gameState.posTeamComp,
-    ];
+    this.gameState.positioned = loadState.positioned;
 
-    this.gamePlay.redrawPositions(this.positioned);
+    // console.log('posTeamHuman');
+    // console.log(this.gameState.posTeamHuman);
+    // console.log('pos');
+    // console.log(this.gameState.positioned);
+
+    this.gamePlay.redrawPositions(this.gameState.positioned);
+  }
+
+  addListeners() {
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+
+    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
+    this.gamePlay.addSaveGameListener(this.onSaveGameClick.bind(this));
+    this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+  }
+
+  removeListeners() {
+    this.gamePlay.cellClickListeners = [];
+    this.gamePlay.cellEnterListeners = [];
+    this.gamePlay.cellLeaveListeners = [];
+    this.gamePlay.newGameListeners = [];
+    this.gamePlay.saveGameListeners = [];
+    this.gamePlay.loadGameListeners = [];
+  }
+
+  deselect() {
+    this.removeListeners();
+    this.selectedCharacter = false;
+    this.indexOfSelectedCharacter = null;
+    this.previouslySelected = null;
+  }
+
+  showStats() {
+    this.gamePlay.setCurrentLevel(this.gameState.level);
+    this.gamePlay.setCurrentScore(this.gameState.points);
+    this.gamePlay.setBestScore(this.gameState.highestPoints);
+  }
+
+  removeSelected() {
+    this.gamePlay.cells.forEach((cell) => cell.classList.remove('selected-yellow', 'selected-green', 'selected-red'));
+  }
+
+  findCharacterHere(index) {
+    return this.gameState.positioned.find(
+      (character) => character.position === index,
+    );
+  }
+
+  findNumberOfStepsToMove() {
+    return this.selectedCharacter.character.moveDistance;
+  }
+
+  findNumberOfStepsToAttack() {
+    return this.selectedCharacter.character.attackDistance;
   }
 }
