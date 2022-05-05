@@ -15,19 +15,4 @@ export default class PositionedCharacter {
     this.character = character;
     this.position = position;
   }
-
-  levelUp() {
-    if (this.health > 0) {
-      this.level += 1;
-      this.attack = Math.max(
-        this.attack,
-        Math.round(this.attack * (0.8 + this.health / 100)),
-      );
-      this.defence = Math.max(
-        this.defence,
-        Math.round(this.defence * (0.8 + this.health / 100)),
-      );
-      this.health < 20 ? (this.health += 80) : (this.health = 100);
-    }
-  }
 }

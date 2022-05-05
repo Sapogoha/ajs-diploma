@@ -1,4 +1,5 @@
 import { calcHealthLevel, calcTileType } from './utils';
+import colour from './constants/colour';
 
 export default class GamePlay {
   constructor() {
@@ -201,7 +202,7 @@ export default class GamePlay {
     alert(message);
   }
 
-  selectCell(index, color = 'yellow') {
+  selectCell(index, color = colour.yellow) {
     this.deselectCell(index);
     this.cells[index].classList.add('selected', `selected-${color}`);
   }
@@ -247,14 +248,14 @@ export default class GamePlay {
   }
 
   setCurrentLevel(level) {
-    this.currentLevel.innerHTML = `Current Level: ${level}`;
+    this.currentLevel.textContent = `Current Level: ${level}`;
   }
 
   setCurrentScore(points) {
-    this.currentScore.innerHTML = `Current Score: ${points}`;
+    this.currentScore.textContent = `Current Score: ${points}`;
   }
 
   setBestScore(highestPoints) {
-    this.bestScore.innerHTML = `Best Score: ${highestPoints}`;
+    this.bestScore.textContent = `Best Score: ${highestPoints}`;
   }
 }

@@ -1,4 +1,5 @@
 import PositionedCharacter from './PositionedCharacter';
+import teams from './constants/teams';
 
 /**
  * Generates random characters
@@ -28,11 +29,11 @@ export function generatePosition(team, side, boardSize = 8) {
   const allCells = [...Array(boardSize ** 2).keys()];
   let possibleCells = null;
 
-  if (side === 'human') {
+  if (side === teams.player) {
     possibleCells = allCells.filter(
       (cell) => cell % boardSize === 0 || cell % boardSize === 1,
     );
-  } else if (side === 'comp') {
+  } else if (side === teams.enemy) {
     possibleCells = allCells.filter(
       (cell) => cell % boardSize === 6 || cell % boardSize === 7,
     );

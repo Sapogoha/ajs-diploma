@@ -1,5 +1,9 @@
-import themes from './themes';
-import cursors from './cursors';
+import themes from './constants/themes';
+import teams from './constants/teams';
+import cursors from './constants/cursors';
+import colour from './constants/colour';
+import errors from './constants/errors';
+import messages from './constants/messages';
 import { possibleMove, countPossibleIndexes, setTimer } from './utils';
 
 import {
@@ -45,8 +49,8 @@ export default class GameController {
   drawCharacters() {
     this.teamHuman = generateTeam(new Team().teamHumanInit, 1, 2);
     this.teamComp = generateTeam(new Team().teamComp, 1, 2);
-    this.posTeamHuman = generatePosition(this.teamHuman, 'human');
-    this.posTeamComp = generatePosition(this.teamComp, 'comp');
+    this.posTeamHuman = generatePosition(this.teamHuman, teams.player);
+    this.posTeamComp = generatePosition(this.teamComp, teams.enemy);
 
     this.gameState.positioned = [...this.posTeamHuman, ...this.posTeamComp];
 
@@ -84,16 +88,16 @@ export default class GameController {
         );
         if (this.selectedCharacter) {
           if (allowedMove && !this.findCharacterHere(index)) {
-            this.gamePlay.selectCell(index, 'green');
+            this.gamePlay.selectCell(index, colour.green);
             this.gamePlay.setCursor(cursors.pointer);
           }
           if (!allowedMove) {
             this.gamePlay.setCursor(cursors.notallowed);
           }
-          if (characterHere?.character.team === 'comp' && allowedAttack) {
-            this.gamePlay.selectCell(index, 'red');
+          if (characterHere?.character.team === teams.enemy && allowedAttack) {
+            this.gamePlay.selectCell(index, colour.red);
             this.gamePlay.setCursor(cursors.crosshair);
-          } else if (characterHere?.character.team === 'human') {
+          } else if (characterHere?.character.team === teams.player) {
             this.gamePlay.selectCell(index, '');
           }
         }
@@ -119,8 +123,8 @@ export default class GameController {
         const characterHere = this.findCharacterHere(index);
         if (characterHere) {
           const { team } = characterHere.character;
-          if (team === 'comp' && !this.selectedCharacter) {
-            GamePlay.showError('It is not your character. Choose yours');
+          if (team === teams.enemy && !this.selectedCharacter) {
+            GamePlay.showError(errors.notYours);
             this.gamePlay.deselectCell(this.indexOfSelectedCharacter || index);
           } else {
             this.previouslySelected = this.selectedCharacter;
@@ -131,9 +135,7 @@ export default class GameController {
             this.gamePlay.setCursor(cursors.pointer);
           }
         } else if (!this.selectedCharacter) {
-          GamePlay.showError(
-            'There is no character here. Choose any cell with a character',
-          );
+          GamePlay.showError(errors.noCharacter);
         }
 
         if (this.previouslySelected && characterHere) {
@@ -145,15 +147,16 @@ export default class GameController {
             numOfSteps,
           );
           const { team } = characterHere.character;
-          if (team === 'human') {
+          if (team === teams.player) {
             this.gamePlay.deselectCell(this.indexOfSelectedCharacter);
             this.gamePlay.selectCell(index);
           } else if (allowedAttack) {
             const competition = characterHere;
+
             const damageValue = Math.max(
-              this.selectedCharacter.character.attack
+              this.previouslySelected.character.attack
                 - competition.character.defence,
-              this.selectedCharacter.character.attack * 0.1,
+              this.previouslySelected.character.attack * 0.1,
             );
             const damage = this.gamePlay.showDamage(index, damageValue);
 
@@ -182,7 +185,7 @@ export default class GameController {
             this.indexOfSelectedCharacter = null;
             this.gameState.playersTurn = false;
           } else {
-            GamePlay.showError('It is too far to attack this character');
+            GamePlay.showError(errors.tooFar);
             this.selectedCharacter = null;
             this.previouslySelected = null;
             this.removeSelected();
@@ -213,13 +216,13 @@ export default class GameController {
             this.removeSelected();
             this.gameState.playersTurn = false;
           } else {
-            GamePlay.showError('It is not allowed to move there');
+            GamePlay.showError(errors.notAllowed);
           }
           this.computersMove();
         }
       }
     } else {
-      GamePlay.showError('It is not your turn yet');
+      GamePlay.showError(errors.notYourTurn);
     }
   }
 
@@ -270,7 +273,7 @@ export default class GameController {
 
         playingCharacter.position = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 
-        this.gamePlay.selectCell(playingCharacter.position, 'green');
+        this.gamePlay.selectCell(playingCharacter.position, colour.green);
         await setTimer(300);
         this.gamePlay.deselectCell(playingCharacter.position);
 
@@ -288,7 +291,7 @@ export default class GameController {
 
         this.gamePlay.selectCell(playingCharacter.position);
         await setTimer(300);
-        this.gamePlay.selectCell(toAttack, 'red');
+        this.gamePlay.selectCell(toAttack, colour.red);
 
         const damage = this.gamePlay.showDamage(toAttack, damageValue);
 
@@ -304,7 +307,7 @@ export default class GameController {
               ...this.posTeamComp,
             ];
             if (this.posTeamHuman.length === 0) {
-              GamePlay.showMessage('You lost. Better luck next time');
+              GamePlay.showMessage(errors.lost);
             }
           }
 
@@ -344,7 +347,7 @@ export default class GameController {
           ).next().value,
         );
 
-        this.posTeamHuman = generatePosition(this.teamHuman, 'human');
+        this.posTeamHuman = generatePosition(this.teamHuman, teams.player);
 
         this.teamComp = generateTeam(
           new Team().teamComp,
@@ -352,13 +355,13 @@ export default class GameController {
           this.posTeamHuman.length,
         );
 
-        this.posTeamComp = generatePosition(this.teamComp, 'comp');
+        this.posTeamComp = generatePosition(this.teamComp, teams.enemy);
 
         this.gameState.positioned = [...this.posTeamHuman, ...this.posTeamComp];
 
         this.gamePlay.redrawPositions(this.gameState.positioned);
       } else {
-        alert('Congrats! This was the last level');
+        GamePlay.showMessage(messages.congrats);
       }
     }
   }
@@ -375,7 +378,7 @@ export default class GameController {
   onSaveGameClick() {
     this.stateService.save(this.gameState);
 
-    GamePlay.showMessage('Saved');
+    GamePlay.showMessage(messages.saved);
   }
 
   onLoadGame() {
@@ -410,6 +413,7 @@ export default class GameController {
           type,
         } = item.character;
 
+        // const character = new type(level);
         const character = new types[type](level);
 
         character.attack = attack;
@@ -423,15 +427,15 @@ export default class GameController {
       });
 
       this.posTeamHuman = this.gameState.positioned.filter(
-        (character) => character.character.team === 'human',
+        (character) => character.character.team === teams.player,
       );
       this.posTeamComp = this.gameState.positioned.filter(
-        (character) => character.character.team === 'comp',
+        (character) => character.character.team === teams.enemy,
       );
 
-      GamePlay.showMessage('Loaded');
+      GamePlay.showMessage(messages.loaded);
     } catch (err) {
-      GamePlay.showError('Something went wrong');
+      GamePlay.showError(errors.wrong);
       return;
     }
 
@@ -471,7 +475,11 @@ export default class GameController {
   }
 
   removeSelected() {
-    this.gamePlay.cells.forEach((cell) => cell.classList.remove('selected-yellow', 'selected-green', 'selected-red'));
+    this.gamePlay.cells.forEach((cell) => cell.classList.remove(
+      `selected-${colour.yellow}`,
+      `selected-${colour.green}`,
+      `selected-${colour.red}`,
+    ));
   }
 
   findCharacterHere(index) {
