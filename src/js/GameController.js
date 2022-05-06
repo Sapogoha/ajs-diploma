@@ -384,13 +384,22 @@ export default class GameController {
   onLoadGame() {
     try {
       const loadState = this.stateService.load();
+      // const types = {
+      //   swordsman: Swordsman,
+      //   bowman: Bowman,
+      //   magician: Magician,
+      //   daemon: Daemon,
+      //   undead: Undead,
+      //   vampire: Vampire,
+      // };
+
       const types = {
-        swordsman: Swordsman,
-        bowman: Bowman,
-        magician: Magician,
-        daemon: Daemon,
-        undead: Undead,
-        vampire: Vampire,
+        Swordsman,
+        Bowman,
+        Magician,
+        Daemon,
+        Undead,
+        Vampire,
       };
 
       this.deselect();
@@ -413,7 +422,9 @@ export default class GameController {
           type,
         } = item.character;
 
-        // const character = new type(level);
+        // const Type = type;
+        // const character = new Type(level);
+
         const character = new types[type](level);
 
         character.attack = attack;

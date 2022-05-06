@@ -189,31 +189,31 @@ body {
   background: url("../img/characters/generic.png");
 }
 
-.character.bowman {
+.character.Bowman {
   background: url("../img/characters/bowman.png");
 }
 
-.character.daemon {
+.character.Daemon {
   background: url("../img/characters/daemon.png");
 }
 
-.character.magician {
+.character.Magician {
   background: url("../img/characters/magician.png");
 }
 
-.character.swordsman {
+.character.Swordsman {
   background: url("../img/characters/swordsman.png");
 }
 
-.character.undead {
+.character.Undead {
   background: url("../img/characters/undead.png");
 }
 
-.character.vampire {
+.character.Vampire {
   background: url("../img/characters/vampire.png");
 }
 
-.character.zombie {
+.character.Zombie {
   background: url("../img/characters/zombie.png");
 }
 

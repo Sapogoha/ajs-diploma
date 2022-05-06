@@ -4,7 +4,7 @@ import teams from '../constants/teams';
 export default class Magician extends Character {
   constructor(level) {
     super(level, new.target.name);
-    this.type = 'magician';
+    // this.type = 'magician';
     this.attack = 10;
     this.defence = 40;
     this.attackDistance = 4;
