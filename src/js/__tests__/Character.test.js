@@ -2,11 +2,14 @@ import Character from '../Character';
 
 import Bowman from '../characters/Bowman';
 import Daemon from '../characters/Daemon';
+import Magician from '../characters/Magician';
+
+import Swordsman from '../characters/Swordsman';
 
 test('test character creation', () => {
   expect(() => new Character(1)).toThrow();
-  expect(() => new Bowman(1)).not.toThrow();
   expect(() => new Daemon(1)).not.toThrow();
+  expect(() => new Swordsman(1)).not.toThrow();
 });
 
 test('levelUp an alive character with a standart level of health, attack and defence', () => {
@@ -35,8 +38,9 @@ test('levelUp an alive character with a low level of health', () => {
   ]);
 });
 
-// test('levelUp a dead character', () => {
-//   const bowman = new Bowman(1);
-//   bowman.health = 0;
-//   expect(() => bowman.levelUp()).toThrow();
-// });
+test('levelUp a dead character', () => {
+  const magician = new Magician(1);
+  magician.health = 0;
+
+  expect(() => magician.levelUp()).toThrow();
+});

@@ -6,6 +6,9 @@ const errors = {
   notYourTurn: 'It is not your turn yet',
   lost: 'You lost. Better luck next time',
   wrong: 'Something went wrong',
+  dead: 'You cannot level up a dead character',
+  notInstance: 'character must be instance of Character or its children',
+  notNumber: 'position must be a number',
 };
 
 export default errors;

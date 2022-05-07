@@ -212,6 +212,9 @@ export default class GamePlay {
     cell.classList.remove(
       ...Array.from(cell.classList).filter((o) => o.startsWith('selected')),
     );
+    cell.classList.remove(
+      ...Array.from(cell.classList).filter((o) => o.startsWith('selected')),
+    );
   }
 
   showCellTooltip(message, index) {

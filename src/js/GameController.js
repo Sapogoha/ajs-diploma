@@ -60,6 +60,8 @@ export default class GameController {
   onCellEnter(index) {
     const characterHere = this.findCharacterHere(index);
 
+    this.gamePlay.setCursor(cursors.auto);
+
     if (characterHere) {
       const {
         level, attack, defence, health,
@@ -98,6 +100,7 @@ export default class GameController {
             this.gamePlay.selectCell(index, colour.red);
             this.gamePlay.setCursor(cursors.crosshair);
           } else if (characterHere?.character.team === teams.player) {
+            this.gamePlay.setCursor(cursors.pointer);
             this.gamePlay.selectCell(index, '');
           }
         }
@@ -376,9 +379,12 @@ export default class GameController {
   }
 
   onSaveGameClick() {
-    this.stateService.save(this.gameState);
-
-    GamePlay.showMessage(messages.saved);
+    try {
+      this.stateService.save(this.gameState);
+      GamePlay.showMessage(messages.saved);
+    } catch (err) {
+      GamePlay.showError(errors.wrong);
+    }
   }
 
   onLoadGame() {

@@ -1,3 +1,5 @@
+import errors from './constants/errors';
+
 export default class Character {
   constructor(level, type = 'generic') {
     this.level = level;
@@ -24,6 +26,8 @@ export default class Character {
         Math.round(this.defence * (0.8 + this.health / 100)),
       );
       this.health < 20 ? (this.health += 80) : (this.health = 100);
+    } else {
+      throw new Error(errors.dead);
     }
   }
 }
