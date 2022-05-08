@@ -9,6 +9,7 @@ const errors = {
   dead: 'You cannot level up a dead character',
   notInstance: 'character must be instance of Character or its children',
   notNumber: 'position must be a number',
+  invalid: 'Invalid state',
 };
 
 export default errors;

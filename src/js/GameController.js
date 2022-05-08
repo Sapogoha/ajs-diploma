@@ -451,7 +451,7 @@ export default class GameController {
       );
 
       GamePlay.showMessage(messages.loaded);
-    } catch (err) {
+    } catch (error) {
       GamePlay.showError(errors.wrong);
       return;
     }
