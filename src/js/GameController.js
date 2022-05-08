@@ -159,7 +159,7 @@ export default class GameController {
             const damageValue = Math.max(
               this.previouslySelected.character.attack
                 - competition.character.defence,
-              this.previouslySelected.character.attack * 0.1,
+              (this.previouslySelected.character.attack * 0.1).toFixed(1),
             );
             const damage = this.gamePlay.showDamage(index, damageValue);
 
@@ -289,7 +289,7 @@ export default class GameController {
 
         const damageValue = Math.max(
           playingCharacter.character.attack - enemy.character.defence,
-          playingCharacter.character.attack * 0.1,
+          (playingCharacter.character.attack * 0.1).toFixed(1),
         );
 
         this.gamePlay.selectCell(playingCharacter.position);
@@ -390,22 +390,13 @@ export default class GameController {
   onLoadGame() {
     try {
       const loadState = this.stateService.load();
-      // const types = {
-      //   swordsman: Swordsman,
-      //   bowman: Bowman,
-      //   magician: Magician,
-      //   daemon: Daemon,
-      //   undead: Undead,
-      //   vampire: Vampire,
-      // };
-
       const types = {
-        Swordsman,
-        Bowman,
-        Magician,
-        Daemon,
-        Undead,
-        Vampire,
+        swordsman: Swordsman,
+        bowman: Bowman,
+        magician: Magician,
+        daemon: Daemon,
+        undead: Undead,
+        vampire: Vampire,
       };
 
       this.deselect();

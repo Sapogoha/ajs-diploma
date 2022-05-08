@@ -3,8 +3,7 @@ import teams from '../constants/teams';
 
 export default class Swordsman extends Character {
   constructor(level) {
-    super(level, new.target.name);
-    // this.type = 'swordsman';
+    super(level, 'swordsman');
     this.attack = 40;
     this.defence = 10;
     this.attackDistance = 1;
