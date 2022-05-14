@@ -1,13 +1,17 @@
 import Character from '../Character';
 import teams from '../constants/teams';
+import teamsParams from '../constants/teamsParams';
 
 export default class Undead extends Character {
   constructor(level) {
-    super(level, 'undead');
-    this.attack = 40;
-    this.defence = 10;
-    this.attackDistance = 1;
-    this.moveDistance = 4;
-    this.team = teams.enemy;
+    super(level, new.target.name);
+    const {
+      attack, defence, attackDistance, moveDistance, team,
+    } = teamsParams[teams.enemy][new.target.name];
+    this.attack = attack;
+    this.defence = defence;
+    this.attackDistance = attackDistance;
+    this.moveDistance = moveDistance;
+    this.team = team;
   }
 }

@@ -4,8 +4,8 @@ import cursors from './constants/cursors';
 import colour from './constants/colour';
 import errors from './constants/errors';
 import messages from './constants/messages';
+import unitType from './constants/uniteType';
 import { possibleMove, countPossibleIndexes, setTimer } from './utils';
-
 import {
   generateTeam,
   generatePosition,
@@ -15,13 +15,6 @@ import {
 import Team from './Team';
 import GamePlay from './GamePlay';
 import GameState from './GameState';
-
-import Bowman from './characters/Bowman';
-import Daemon from './characters/Daemon';
-import Magician from './characters/Magician';
-import Swordsman from './characters/Swordsman';
-import Undead from './characters/Undead';
-import Vampire from './characters/Vampire';
 import PositionedCharacter from './PositionedCharacter';
 
 export default class GameController {
@@ -390,17 +383,8 @@ export default class GameController {
   onLoadGame() {
     try {
       const loadState = this.stateService.load();
-      const types = {
-        swordsman: Swordsman,
-        bowman: Bowman,
-        magician: Magician,
-        daemon: Daemon,
-        undead: Undead,
-        vampire: Vampire,
-      };
 
       this.deselect();
-
       this.gameState.level = loadState.level;
       this.gameState.points = loadState.points;
       this.gameState.highestPoints = loadState.highestPoints;
@@ -419,10 +403,7 @@ export default class GameController {
           type,
         } = item.character;
 
-        // const Type = type;
-        // const character = new Type(level);
-
-        const character = new types[type](level);
+        const character = new unitType[type](level);
 
         character.attack = attack;
         character.attackDistance = attackDistance;
