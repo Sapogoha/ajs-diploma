@@ -56,10 +56,12 @@ export default class GameController {
     this.gamePlay.setCursor(cursors.auto);
 
     if (characterHere) {
-      const {
-        level, attack, defence, health,
-      } = characterHere.character;
+      const { level, attack, defence } = characterHere.character;
+      let { health } = characterHere.character;
 
+      if (!Number.isInteger(health)) {
+        health = health.toFixed(1);
+      }
       this.gamePlay.showCellTooltip(
         `🎖${level} ⚔${attack} 🛡${defence} ❤${health}`,
         index,
